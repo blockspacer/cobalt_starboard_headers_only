@@ -189,3 +189,7 @@ class cobalt_starboard_headers_only_conan_project(ConanFile):
 
         #self.cpp_info.libs = tools.collect_libs(self)
         #self.cpp_info.defines.append('PDFLIB_DLL')
+
+    def package_id(self):
+        # see https://docs.conan.io/en/latest/howtos/header_only.html
+        self.info.header_only()
