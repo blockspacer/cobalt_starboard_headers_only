@@ -115,33 +115,35 @@ class cobalt_starboard_headers_only_conan_project(ConanFile):
         return cmake
 
     def package(self):
-        self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
-        cmake = self._configure_cmake()
-        cmake.install()
+        with tools.vcvars(self.settings, only_diff=False): # https://github.com/conan-io/conan/issues/6577
+            self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
+            cmake = self._configure_cmake()
+            cmake.install()
 
     def build(self):
-        cmake = self._configure_cmake()
-        if self.settings.compiler == 'gcc':
-            cmake.definitions["CMAKE_C_COMPILER"] = "gcc-{}".format(
-                self.settings.compiler.version)
-            cmake.definitions["CMAKE_CXX_COMPILER"] = "g++-{}".format(
-                self.settings.compiler.version)
+        with tools.vcvars(self.settings, only_diff=False): # https://github.com/conan-io/conan/issues/6577
+            cmake = self._configure_cmake()
+            if self.settings.compiler == 'gcc':
+                cmake.definitions["CMAKE_C_COMPILER"] = "gcc-{}".format(
+                    self.settings.compiler.version)
+                cmake.definitions["CMAKE_CXX_COMPILER"] = "g++-{}".format(
+                    self.settings.compiler.version)
 
-        #cmake.definitions["CMAKE_TOOLCHAIN_FILE"] = 'conan_paths.cmake'
+            #cmake.definitions["CMAKE_TOOLCHAIN_FILE"] = 'conan_paths.cmake'
 
-        # The CMakeLists.txt file must be in `source_folder`
-        cmake.configure(source_folder=".")
+            # The CMakeLists.txt file must be in `source_folder`
+            cmake.configure(source_folder=".")
 
-        cpu_count = tools.cpu_count()
-        self.output.info('Detected %s CPUs' % (cpu_count))
+            cpu_count = tools.cpu_count()
+            self.output.info('Detected %s CPUs' % (cpu_count))
 
-        # -j flag for parallel builds
-        cmake.build(args=["--", "-j%s" % cpu_count])
+            # -j flag for parallel builds
+            cmake.build(args=["--", "-j%s" % cpu_count])
 
-        if self.options.enable_tests:
-          self.output.info('Running tests')
-          self.run('ctest --parallel %s' % (cpu_count))
-          # TODO: use cmake.test()
+            if self.options.enable_tests:
+                self.output.info('Running tests')
+                self.run('ctest --parallel %s' % (cpu_count))
+                # TODO: use cmake.test()
 
     # Importing files copies files from the local store to your project.
     def imports(self):
